@@ -42,8 +42,10 @@ cloudctl version
 - **Display name** — human-readable label
 - **Compose directory** — folder containing `docker-compose.yml`
 - **Compose project name** — optional `-p` value for Docker Compose
-- **Serve targets** — comma-separated ports/URLs for `tailscale serve --bg`
-- **Funnel targets** — comma-separated ports/URLs for `tailscale funnel --bg`
+- **Serve targets** — comma-separated `LOCAL` or `LOCAL:LISTEN` entries
+- **Funnel targets** — same format for `tailscale funnel --bg`
+
+Use `LOCAL:LISTEN` so each project gets a distinct URL port (e.g. `8000` → `https://your-host.ts.net:8000`). Use `8000:8443` to forward local `:8000` through Tailscale port `:8443`.
 
 Config is saved to `~/.config/cloudctl/config.yaml`. Override with `CLOUDCTL_CONFIG`.
 
@@ -65,8 +67,10 @@ projects:
     compose_project: my-api
     serve:
       - target: "8080"
+        listen_port: 8080
     funnel:
       - target: "3000"
+        listen_port: 3000
 ```
 
 ## Requirements

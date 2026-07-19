@@ -9,10 +9,14 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class TailscaleTarget(BaseModel):
-    """A local service target for tailscale serve or funnel."""
+    """Local service target and Tailscale listen port for serve/funnel."""
 
     target: str = Field(
-        description="Port number or URL, e.g. 3000 or http://localhost:8080"
+        description="Local port or URL, e.g. 8000 or http://localhost:8080"
+    )
+    listen_port: int | None = Field(
+        default=None,
+        description="Port on the .ts.net URL, e.g. 8000 for https://host.ts.net:8000",
     )
 
     @field_validator("target")
@@ -22,6 +26,24 @@ class TailscaleTarget(BaseModel):
         if not cleaned:
             raise ValueError("target cannot be empty")
         return cleaned
+
+    @field_validator("listen_port")
+    @classmethod
+    def validate_listen_port(cls, value: int | None) -> int | None:
+        if value is not None and not 1 <= value <= 65535:
+            raise ValueError("listen_port must be between 1 and 65535")
+        return value
+
+    def model_post_init(self, __context: object) -> None:
+        if self.listen_port is None and self.target.isdigit():
+            object.__setattr__(self, "listen_port", int(self.target))
+
+    def display_label(self) -> str:
+        if self.listen_port is None:
+            return self.target
+        if self.target == str(self.listen_port):
+            return f":{self.listen_port}"
+        return f"{self.target} -> :{self.listen_port}"
 
 
 class ProjectConfig(BaseModel):

@@ -18,7 +18,7 @@ from cloudctl.prompts import (
     prompt_select_project,
     prompt_tailscale_mode,
 )
-from cloudctl.tailscale_ops import apply_tailscale_mode
+from cloudctl.tailscale_ops import apply_tailscale_mode, tailscale_status
 
 app = typer.Typer(
     name="cloudctl",
@@ -125,6 +125,10 @@ def start_cmd() -> None:
             f"[green]Tailscale {mode}:[/green] {format_command(result.command)}"
         )
 
+    status = tailscale_status(mode)
+    if status.stdout:
+        console.print(f"\n[bold]Tailscale URLs[/bold]\n{status.stdout}")
+
     console.print(f"\n[bold green]Project {key} is running.[/bold green]")
 
 
@@ -149,8 +153,8 @@ def list_cmd() -> None:
     table.add_column("Funnel")
 
     for key, project in projects:
-        serve = ", ".join(t.target for t in project.serve) or "-"
-        funnel = ", ".join(t.target for t in project.funnel) or "-"
+        serve = ", ".join(t.display_label() for t in project.serve) or "-"
+        funnel = ", ".join(t.display_label() for t in project.funnel) or "-"
         table.add_row(
             key,
             project.name,

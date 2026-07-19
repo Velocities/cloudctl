@@ -5,13 +5,30 @@ from __future__ import annotations
 from typing import Literal
 
 from cloudctl.docker_ops import CommandResult, run_command
-from cloudctl.models import ProjectConfig
+from cloudctl.models import ProjectConfig, TailscaleTarget
 
 TailscaleMode = Literal["serve", "funnel"]
 
 
 def reset_tailscale(mode: TailscaleMode) -> CommandResult:
     return run_command(["tailscale", mode, "reset"])
+
+
+def build_tailscale_command(mode: TailscaleMode, target: TailscaleTarget) -> list[str]:
+    if target.listen_port is None:
+        raise ValueError(
+            f"Tailscale target '{target.target}' needs a listen port. "
+            "Use LOCAL:LISTEN in configure (e.g. 8000:8000)."
+        )
+
+    return [
+        "tailscale",
+        mode,
+        "--bg",
+        "--yes",
+        f"--https={target.listen_port}",
+        target.target,
+    ]
 
 
 def apply_tailscale_mode(
@@ -29,9 +46,11 @@ def apply_tailscale_mode(
     results.append(reset_result)
 
     for target in targets:
-        result = run_command(
-            ["tailscale", mode, "--bg", target.target],
-            check=True,
-        )
+        command = build_tailscale_command(mode, target)
+        result = run_command(command, check=True)
         results.append(result)
     return results
+
+
+def tailscale_status(mode: TailscaleMode) -> CommandResult:
+    return run_command(["tailscale", mode, "status"])

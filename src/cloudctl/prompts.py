@@ -56,10 +56,34 @@ def prompt_compose_project() -> str | None:
     return raw or None
 
 
+def parse_tailscale_target(raw: str) -> TailscaleTarget:
+    """Parse LOCAL or LOCAL:LISTEN (listen = port on the .ts.net URL)."""
+    cleaned = raw.strip()
+    if not cleaned:
+        raise ValueError("target cannot be empty")
+
+    if "://" not in cleaned and ":" in cleaned:
+        local, listen = cleaned.rsplit(":", 1)
+        local = local.strip()
+        listen = listen.strip()
+        if local and listen.isdigit():
+            return TailscaleTarget(target=local, listen_port=int(listen))
+
+    return TailscaleTarget(target=cleaned)
+
+
 def prompt_tailscale_targets(label: str) -> list[TailscaleTarget]:
     console.print(
         f"\n[bold]{label}[/bold] targets for Tailscale "
-        "(port or URL, comma-separated; leave blank for none)"
+        "(comma-separated; leave blank for none)"
+    )
+    console.print(
+        "Format: [cyan]LOCAL[/cyan] or [cyan]LOCAL:LISTEN[/cyan] "
+        "(LISTEN is the port on your .ts.net URL)"
+    )
+    console.print(
+        "Examples: [dim]8000[/dim] exposes https://your-host.ts.net:8000 -> local :8000; "
+        "[dim]8000:8443[/dim] uses :8443 on the URL"
     )
     raw = Prompt.ask("Targets", default="").strip()
     if not raw:
@@ -68,8 +92,12 @@ def prompt_tailscale_targets(label: str) -> list[TailscaleTarget]:
     targets: list[TailscaleTarget] = []
     for part in raw.split(","):
         cleaned = part.strip()
-        if cleaned:
-            targets.append(TailscaleTarget(target=cleaned))
+        if not cleaned:
+            continue
+        try:
+            targets.append(parse_tailscale_target(cleaned))
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/red]")
     return targets
 
 
