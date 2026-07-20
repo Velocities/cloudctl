@@ -16,7 +16,9 @@ chmod +x scripts/install.sh
 ./scripts/install.sh
 ```
 
-Open a new terminal (or `source ~/.profile`), then use `cloudctl` from any directory—no `cd`, no `source .venv/bin/activate`.
+Open a new terminal (or `source ~/.bashrc` once after install), then use `cloudctl` from any directory—no project folder, no venv activate.
+
+The install script adds `~/.local/bin` to your **`.bashrc`** (not only `.profile`), so normal interactive terminals pick up `cloudctl` without extra steps.
 
 To remove the command from your PATH (keeps the repo and venv):
 

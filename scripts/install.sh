@@ -6,6 +6,32 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="$ROOT/.venv"
 BIN_DIR="${HOME}/.local/bin"
 LINK="${BIN_DIR}/cloudctl"
+MARKER_START="# >>> cloudctl install >>>"
+MARKER_END="# <<< cloudctl install <<<"
+
+ensure_path_in_shell() {
+    local shell_rc="$1"
+    if [[ ! -f "${shell_rc}" ]]; then
+        return 0
+    fi
+    if grep -qF "${MARKER_START}" "${shell_rc}" 2>/dev/null; then
+        return 0
+    fi
+
+    cat >>"${shell_rc}" <<'EOF'
+
+# >>> cloudctl install >>>
+# User-local CLI tools (e.g. cloudctl). Interactive shells read this file, not only ~/.profile.
+if [ -d "$HOME/.local/bin" ] ; then
+    case ":${PATH}:" in
+        *":$HOME/.local/bin:"*) ;;
+        *) PATH="$HOME/.local/bin:$PATH" ;;
+    esac
+fi
+# <<< cloudctl install <<<
+EOF
+    echo "Updated ${shell_rc} to include ~/.local/bin on PATH."
+}
 
 bootstrap_venv() {
     if [[ -x "${VENV}/bin/python" ]]; then
@@ -44,16 +70,13 @@ echo ""
 echo "Installed: ${LINK} -> ${VENV}/bin/cloudctl"
 echo ""
 
-case ":${PATH}:" in
-    *":${BIN_DIR}:"*) ;;
-    *)
-        echo "Note: ${BIN_DIR} is not on PATH in this shell."
-        echo "Add to ~/.profile or ~/.bashrc (Ubuntu often already has this):"
-        echo ""
-        echo '  export PATH="$HOME/.local/bin:$PATH"'
-        echo ""
-        ;;
-esac
+ensure_path_in_shell "${HOME}/.bashrc"
+if [[ -f "${HOME}/.zshrc" ]]; then
+    ensure_path_in_shell "${HOME}/.zshrc"
+fi
 
+echo ""
+echo "Open a new terminal, or run:  source ~/.bashrc"
+echo ""
 echo "Try: cloudctl version"
 "${LINK}" version
