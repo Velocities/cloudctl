@@ -6,7 +6,27 @@ Manage Docker Compose projects and Tailscale `serve` / `funnel` from a single CL
 
 When you switch branches constantly, editing `docker-compose.yml` in each repo is painful. `cloudctl` keeps project metadata (compose directory, `-p` name, Tailscale ports) in a persistent config file so you can stop everything, start one project, and expose it over Tailscale with one command.
 
-## Setup
+## Install (system-wide for your user)
+
+Run once from this repo. It creates/updates the project venv and links `cloudctl` into `~/.local/bin` (same pattern as many user-installed CLI tools on Ubuntu):
+
+```bash
+cd ~/cloudctl
+chmod +x scripts/install.sh
+./scripts/install.sh
+```
+
+Open a new terminal (or `source ~/.profile`), then use `cloudctl` from any directory—no `cd`, no `source .venv/bin/activate`.
+
+To remove the command from your PATH (keeps the repo and venv):
+
+```bash
+./scripts/uninstall.sh
+```
+
+## Developer setup (optional)
+
+If you prefer working inside the venv directly:
 
 ```bash
 python3 -m venv .venv
@@ -15,14 +35,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-If `python3 -m venv` fails on Debian/Ubuntu (missing `ensurepip`):
-
-```bash
-python3 -m venv .venv --without-pip
-curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-.venv/bin/python get-pip.py && rm get-pip.py
-pip install -r requirements.txt && pip install -e .
-```
+If `python3 -m venv` fails on Debian/Ubuntu (missing `ensurepip`), `scripts/install.sh` handles the `--without-pip` fallback automatically.
 
 ## Usage
 
