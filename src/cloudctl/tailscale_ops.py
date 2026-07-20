@@ -14,6 +14,21 @@ def reset_tailscale(mode: TailscaleMode) -> CommandResult:
     return run_command(["tailscale", mode, "reset"])
 
 
+def down_tailscale_for_project(project: ProjectConfig) -> list[CommandResult]:
+    """Reset Tailscale modes configured for this project."""
+    results: list[CommandResult] = []
+    if project.serve:
+        results.append(reset_tailscale("serve"))
+    if project.funnel:
+        results.append(reset_tailscale("funnel"))
+    return results
+
+
+def down_all_tailscale() -> list[CommandResult]:
+    """Reset both serve and funnel on this node."""
+    return [reset_tailscale("serve"), reset_tailscale("funnel")]
+
+
 def build_tailscale_command(mode: TailscaleMode, target: TailscaleTarget) -> list[str]:
     if target.listen_port is None:
         raise ValueError(

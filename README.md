@@ -43,6 +43,8 @@ If `python3 -m venv` fails on Debian/Ubuntu (missing `ensurepip`), `scripts/inst
 cloudctl configure   # add or update a project (interactive)
 cloudctl list        # show configured projects
 cloudctl start       # stop all containers, start one project, set up Tailscale
+cloudctl down        # compose down + Tailscale reset for one project (prompt)
+cloudctl down --all  # stop every configured project
 cloudctl remove      # remove a project from config
 cloudctl version
 ```
@@ -69,6 +71,13 @@ Config is saved to `~/.config/cloudctl/config.yaml`. Override with `CLOUDCTL_CON
 3. Run `docker compose up -d` for that project
 4. Choose **serve** or **funnel** (when both are configured)
 5. Reset and apply Tailscale for the selected mode
+
+### Down workflow
+
+1. Pick a configured project (or pass a project key), or use `--all`
+2. Run `docker compose down` for the project(s)
+3. Reset Tailscale **serve** and/or **funnel** when that project has those targets configured
+4. With `--all`, every configured project is stopped and both Tailscale serve and funnel are reset on this machine
 
 ## Example config
 

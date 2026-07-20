@@ -73,6 +73,14 @@ def stop_all_containers() -> CommandResult:
 
 
 def compose_up(project: ProjectConfig) -> CommandResult:
+    return run_command(_compose_command(project, "up", "-d"), cwd=project.compose_dir, check=True)
+
+
+def compose_down(project: ProjectConfig) -> CommandResult:
+    return run_command(_compose_command(project, "down"), cwd=project.compose_dir)
+
+
+def _compose_command(project: ProjectConfig, *args: str) -> list[str]:
     compose_file = find_compose_file(project.compose_dir)
     command = [
         "docker",
@@ -82,8 +90,8 @@ def compose_up(project: ProjectConfig) -> CommandResult:
     ]
     if project.compose_project:
         command.extend(["-p", project.compose_project])
-    command.extend(["up", "-d"])
-    return run_command(command, cwd=project.compose_dir, check=True)
+    command.extend(args)
+    return command
 
 
 def format_command(command: list[str]) -> str:
